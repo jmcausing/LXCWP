@@ -1,0 +1,21 @@
+- hosts: all
+  become: true
+  become_user: root
+
+  tasks:
+    - name: apt clean
+      shell: apt clean
+      become: true
+      become_user: root
+
+    - name: apt update
+      shell: apt update
+      become: true
+      become_user: root
+
+    - name: Install Nginx latest version
+      apt: name=nginx state=latest
+    - name: start nginx
+      service:
+          name: nginx
+          state: started

@@ -1,0 +1,25 @@
+- hosts: all
+  vars:
+    ansible_host_key_checking: false
+  vars_files:
+    - vars/default.yml
+  become: true
+  become_user: root
+
+  tasks:
+    - name: apt clean
+      shell: apt clean
+      become: true
+      become_user: root
+
+    tasks:
+    - name: Runnning 'apt update'
+      shell: apt update
+      become: true
+      become_user: root    
+
+    - name: Install LEMP Packages [mysq-server, nginx]
+      apt: name={{ item }} update_cache=yes state=latest
+      # loop: [ 'mysql-server',  'python3-pymysql' ]
+      [ 'ngix' ]
+

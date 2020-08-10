@@ -1,0 +1,2 @@
+[defaults]
+privatekeyfile = ~/.ssh/id_lxc_johnmark
