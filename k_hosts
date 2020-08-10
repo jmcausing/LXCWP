@@ -1,2 +1,6 @@
 [lxc]
+<<<<<<< HEAD
 10.32.193.20 ansible_user=root 
+=======
+10.32.193.206 ansible_user=root 
+>>>>>>> c38d5d1743d66a22ffd38bf1df8f5d9c5f8d7a13

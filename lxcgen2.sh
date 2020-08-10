@@ -182,6 +182,16 @@ SSHKEY=~/.ssh/id_lxc_${lxcname}
 echo "# Let's install WordPress with LEMP stack using Ansible."
 echo "# Creating playbook lemp.yml and host file"
 echo "- hosts: all
+<<<<<<< HEAD
+=======
+
+  vars:
+    ansible_host_key_checking: false
+
+    # Workaround if LXC target host does not have python 3 (not by default)
+    ansible_python_interpreter: "/usr/bin/python3"
+
+>>>>>>> c38d5d1743d66a22ffd38bf1df8f5d9c5f8d7a13
   become: true
   become_user: root
 

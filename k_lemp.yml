@@ -1,4 +1,14 @@
 - hosts: all
+<<<<<<< HEAD
+=======
+
+  vars:
+    ansible_host_key_checking: false
+
+    # Workaround if LXC target host does not have python 3 (not by default)
+    ansible_python_interpreter: /usr/bin/python3
+
+>>>>>>> c38d5d1743d66a22ffd38bf1df8f5d9c5f8d7a13
   become: true
   become_user: root
 
