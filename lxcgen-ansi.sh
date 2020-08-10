@@ -209,6 +209,46 @@ ${LXC_IP} ansible_user=root "> ${lxcname}_hosts
 
 ls -al  ${lxcname}_lemp.yml
 ls -al  ${lxcname}_hosts
+
+
+echo "#"
+echo "#"
+echo "#"
+echo "# Setting up files for ansible playbook.."
+echo "# Downloading nginx 'default' file."
+
+
+# Creating folders for ansible playboook
+mkdir ${lxcname}_ansible
+mkdir ${lxcname}/files
+mkdir ${lxcname}/vars
+
+
+## Downloading nginx 'default' file
+if [[ $(ls default | grep default) ]]; 
+then
+  echo "# 'default' file exist. Deleting.. Then download a new one"
+      rm default*
+       wget https://raw.githubusercontent.com/jmcausing/LXCWP/master/files/default
+else
+   echo "# Downloading nginx default file to files/default"
+   wget https://raw.githubusercontent.com/jmcausing/LXCWP/master/files/default
+  
+fi
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 echo "#"
 echo "#"
 echo "# Running playbook with this command:"
@@ -224,6 +264,9 @@ echo "#"
 echo "#"
 echo "# Testing nginx.."
 curl -I http://${LXC_IP}
+
+
+
 
 
 
