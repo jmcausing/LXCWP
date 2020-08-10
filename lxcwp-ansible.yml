@@ -72,7 +72,7 @@
       # Nginx Configuration
     - name: Sets / copy Nginx conf file
       template:
-        src: "files/default"
+        src: "default"
         dest: "/etc/nginx/sites-available/default"
 
 

@@ -2,30 +2,44 @@
   vars:
     ansible_host_key_checking: false
   vars_files:
-    - vars/default.yml
+    - vars.yml
   become: true
   become_user: root
 
   tasks:
 
+    - name: Update apt Cache
+      apt: 
+        update_cache: yes
+        force_apt_get: yes
+    - name: Wait for APT Lock
+      shell:  while fuser /var/lib/dpkg/lock >/dev/null 2>&1; do sleep 5; done;
+
+
+
+    - apt_repository:
+        repo: ppa:ondrej/php
 
     # Apt clean and update
     - name: apt clean
-      shell: apt clean
-      become: true
-      become_user: root
-
-    - name: apt update
-      shell: apt update
+      shell: apt clean; apt install software-properties-common; apt update
       become: true
       become_user: root
 
 
 
     # Installing packages: nginx, mariadb-server , python3-pymysql
-    - name: Install LEMP Packages [mysq-server, nginx]
+    - name: Install LEMP Packages [nginx, mysq-server, python3-pymysql, php-fpm']
       apt: name={{ item }} update_cache=yes state=latest
       loop: [ 'nginx', 'mariadb-server', 'python3-pymysql' ]
+
+
+
+    - name: Apt install software-properties and Apt update
+      shell: apt install software-properties-common; apt update
+      become: true
+      become_user: root
+
 
 
     - name: Sets the root password 
@@ -64,16 +78,17 @@
       apt: name={{ item }} update_cache=yes state=latest
       loop: [ 'php-curl', 'php-gd', 'php-intl', 'php-mbstring', 'php-soap', 'php-xml', 'php-xmlrpc', 'php-zip' ]
 
-    - name: Installing Additional PHP Extensions
-      shell: "sudo systemctl status php*"
-
-
+    - name: Installing PHP 7.3 extension
+      apt:  name={{ item }} 
+      loop: [ 'php7.3-fpm', 'php7.3-common','php7.3-cli','php7.3-bcmath','php7.3-bz2','php7.3-curl','php7.3-gd','php7.3-intl','php7.3-json','php7.3-mbstring','php7.3-readline','php7.3-xml','php7.3-zip' ]
 
       # Nginx Configuration
     - name: Sets / copy Nginx conf file
       template:
-        src: "files/default"
+        src: "default"
         dest: "/etc/nginx/sites-available/default"
+
+
 
 
 
