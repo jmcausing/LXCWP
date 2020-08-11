@@ -260,8 +260,6 @@ else
    wget https://github.com/jmcausing/LXCWP/raw/master/vars.yml
 fi
 
-
-
 echo "# Checking files.."
 ls -al  ${lxcname}_lemp.yml
 ls -al  ${lxcname}_hosts
@@ -269,14 +267,10 @@ ls -al vars.yml
 echo "#"
 
 
-
-
-
-
 echo "#"
 echo "# Running playbook with this command:"
 echo "#"
-echo "# ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook ${lxcname}_lemp.yml -i ${lxcname}_hosts --private-key=${SSHKEY} -vvv --check"
+echo "# ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook ${lxcname}_lemp.yml -i ${lxcname}_hosts --private-key=${SSHKEY} -vvv"
 echo "#"
 
 # ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook ${lxcname}_lemp.yml -i ${lxcname}_hosts --private-key=~${SSHKEY} 
