@@ -1,3 +1,14 @@
 ---	
 mysql_root_password: "xxx" 
-mysql_wp_passwd: "xxx" 
+
+
+#MySQL Settings
+mysql_root_password: "mysql_root_password"
+mysql_db: "wordpress"
+mysql_user: "wp_user"
+mysql_password: "password"
+
+#HTTP Settings
+http_host: "your_domain"
+http_conf: "your_domain.conf"
+http_port: "80"

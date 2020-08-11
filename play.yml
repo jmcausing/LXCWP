@@ -77,7 +77,7 @@
     - name: Create database user with password and all database privileges and 'WITH GRANT OPTION'
       mysql_user:
        name: wp_user
-       password: "{{ mysql_wp_passwd }}"
+       password: "{{ mysql_password }}"
        state: present
        login_unix_socket: /var/run/mysqld/mysqld.sock
        priv: 'wordpress.*:ALL/wordpress.*:ALL/*.*:SUPER,RELOAD,SHOW DATABASES'
@@ -87,6 +87,7 @@
 
 
 
+    # -- END 
     # Step 2 — Installing Additional PHP Extensions
     # https://www.digitalocean.com/community/tutorials/how-to-install-wordpress-with-lemp-nginx-mariadb-and-php-on-debian-10#step-2-%E2%80%94-installing-additional-php-extensions
  
@@ -103,57 +104,59 @@
       template:
         src: "default"
         dest: "/etc/nginx/sites-available/default"
+    # Step 2 — Installing Additional PHP Extensions
+    # -- END 
 
 
-
-    # WordPress Configuration
+    # -- START
+    # WordPress Configuration and permission -
     # Step 4 — Downloading WordPress - https://www.digitalocean.com/community/tutorials/how-to-install-wordpress-with-lemp-nginx-mariadb-and-php-on-debian-10
 
     - name: Download and unpack latest WordPress
       unarchive:
         src: https://wordpress.org/latest.tar.gz
-        dest: "/var/www/html"
+        dest: "/var/www"
         remote_src: yes
-        creates: "/var/www/html/wordpress"
-    
-  
+        creates: "/var/www/wordpress"
 
+    - name: Remove old html and replace with with WP files
+      shell: "rm -rf /var/www/html; mv /var/www/wordpress /var/www/html"
 
+    - name: Set ownership
+      file:
+        path: "/var/www/html"
+        state: directory
+        recurse: yes
+        owner: www-data
+        group: www-data
+      tags: [ wordpress ]
 
+    - name: Set permissions for directories
+      shell: "/usr/bin/find /var/www/html/ -type d -exec chmod 750 {} \\;"
+      tags: [ wordpress ]
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- #   - name: Removes all anonymous user accounts
- #     mysql_user:
- #       # login_unix_socket is important to avoid authentication issue
- #       login_unix_socket: /var/run/mysqld/mysqld.sock
- #       name: ''
- #       host_all: yes
- #       state: absent
- #       login_user: root
- #       login_password: "{{ mysql_root_password }}"
+    - name: Set permissions for files
+      shell: "/usr/bin/find /var/www/html/ -type f -exec chmod 640 {} \\;"
+      tags: [ wordpress ]
 
     
-#    For testing only - Working so far
-#    - name: Removes the MySQL 'performance_schema' database
-#      mysql_db: 
-#        login_unix_socket: /var/run/mysqld/mysqld.sock
-#        name: performance_schema 
-#        state: absent
-#       login_user: root
-#        login_password: "{{ mysql_root_password }}"
+    - name: Set up wp-config
+      template:
+        src: "ansible_wpconfig.php"
+        dest: "/var/www/html/wp-config.php"
+        owner: www-data
+        group: www-data
 
-       
+    # WordPress Configuration and permission -
+    # -- END
+
+
+
+
+
+
+
+
+
+
+

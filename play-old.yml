@@ -1,25 +1,185 @@
 - hosts: all
   vars:
     ansible_host_key_checking: false
+
+    # Workaround if LXC target host does not have python 3 (not by default)
+    ansible_python_interpreter: "/usr/bin/python3"
+    
   vars_files:
-    - vars/default.yml
+    - vars.yml
   become: true
   become_user: root
 
   tasks:
+
+
+
+      # Required for mysql tasks
+    # - name: Install packages
+    #   apt: name={{item}}
+    #   with_items:
+    #     - python3-pip
+    #     - python3-mysqldb  
+
+    - name: Update apt Cache
+      apt: 
+        update_cache: yes
+        force_apt_get: yes
+        
+    - name: Wait for APT Lock
+      shell:  while fuser /var/lib/dpkg/lock >/dev/null 2>&1; do sleep 5; done;
+
+
+
+    # Required for PHP FPM
+    - apt_repository:
+        repo: ppa:ondrej/php
+
+    # Apt clean and update
     - name: apt clean
-      shell: apt clean
+      shell: apt clean; apt install software-properties-common; apt update
       become: true
       become_user: root
 
-    tasks:
-    - name: Runnning 'apt update'
-      shell: apt update
-      become: true
-      become_user: root    
 
-    - name: Install LEMP Packages [mysq-server, nginx]
+
+
+    # Installing packages: nginx, mariadb-server , python3-pymysql
+    - name: Install LEMP Packages [nginx, mysq-server, python3-pymysql, php-fpm']
       apt: name={{ item }} update_cache=yes state=latest
-      # loop: [ 'mysql-server',  'python3-pymysql' ]
-      [ 'ngix' ]
+      loop: [ 'nginx', 'mariadb-server', 'python3-pymysql' ]
 
+
+
+    - name: Apt install software-properties and Apt update
+      shell: apt install software-properties-common; apt update
+      become: true
+      become_user: root
+
+
+
+    - name: Sets the root password 
+      mysql_user: 
+        name: root 
+        password: "{{ mysql_root_password }}"
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+
+    # Step 1 — Creating a Database and User for WordPress
+    # https://www.digitalocean.com/community/tutorials/how-to-install-wordpress-with-lemp-nginx-mariadb-and-php-on-debian-10
+
+    - name: Create a new database with name 'bobdata'
+      mysql_db:
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+        name: wordpress
+        state: present
+
+
+    - name: Create database user with password and all database privileges and 'WITH GRANT OPTION'
+      mysql_user:
+       name: wp_user
+       password: "{{ mysql_password }}"
+       state: present
+       login_unix_socket: /var/run/mysqld/mysqld.sock
+       priv: 'wordpress.*:ALL/wordpress.*:ALL/*.*:SUPER,RELOAD,SHOW DATABASES'
+
+    - name: Flush Privileges
+      shell: mysql -e "FLUSH PRIVILEGES;"    
+
+
+
+    # Step 2 — Installing Additional PHP Extensions
+    # https://www.digitalocean.com/community/tutorials/how-to-install-wordpress-with-lemp-nginx-mariadb-and-php-on-debian-10#step-2-%E2%80%94-installing-additional-php-extensions
+ 
+    # - name: Installing Additional PHP Extensions
+    #   apt: name={{ item }} update_cache=yes state=latest
+    #   loop: [ 'php-curl', 'php-gd', 'php-intl', 'php-mbstring', 'php-soap', 'php-xml', 'php-xmlrpc', 'php-zip' ]
+
+    - name: Installing PHP 7.3 extension
+      apt:  name={{ item }} 
+      loop: [ 'php7.3-fpm', 'php7.3-common','php7.3-cli','php7.3-bcmath','php7.3-bz2','php7.3-curl','php7.3-gd','php7.3-intl','php7.3-json','php7.3-mbstring','php7.3-readline','php7.3-xml','php7.3-zip' ]
+
+      # Nginx Configuration
+    - name: Sets / copy Nginx conf file
+      template:
+        src: "default"
+        dest: "/etc/nginx/sites-available/default"
+
+
+
+    # -- START
+    # WordPress Configuration and permission -
+    # Step 4 — Downloading WordPress - https://www.digitalocean.com/community/tutorials/how-to-install-wordpress-with-lemp-nginx-mariadb-and-php-on-debian-10
+
+    - name: Download and unpack latest WordPress
+      unarchive:
+        src: https://wordpress.org/latest.tar.gz
+        dest: "/var/www"
+        remote_src: yes
+        creates: "/var/www/wordpress"
+
+    - name: Remove old html and replace with with WP files
+      shell: "rm -rf /var/www/html; mv /var/www/wordpress /var/www/html"
+
+    - name: Set ownership
+      file:
+        path: "/var/www/html"
+        state: directory
+        recurse: yes
+        owner: www-data
+        group: www-data
+      tags: [ wordpress ]
+
+    - name: Set permissions for directories
+      shell: "/usr/bin/find /var/www/html/ -type d -exec chmod 750 {} \\;"
+      tags: [ wordpress ]
+
+    - name: Set permissions for files
+      shell: "/usr/bin/find /var/www/html/ -type f -exec chmod 640 {} \\;"
+      tags: [ wordpress ]
+
+    
+    - name: Set up wp-config
+      template:
+        src: "ansible_wpconfig.php"
+        dest: "/var/www/html/wp-config.php"
+
+    # WordPress Configuration and permission -
+    # -- END
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ #   - name: Removes all anonymous user accounts
+ #     mysql_user:
+ #       # login_unix_socket is important to avoid authentication issue
+ #       login_unix_socket: /var/run/mysqld/mysqld.sock
+ #       name: ''
+ #       host_all: yes
+ #       state: absent
+ #       login_user: root
+ #       login_password: "{{ mysql_root_password }}"
+
+    
+#    For testing only - Working so far
+#    - name: Removes the MySQL 'performance_schema' database
+#      mysql_db: 
+#        login_unix_socket: /var/run/mysqld/mysqld.sock
+#        name: performance_schema 
+#        state: absent
+#       login_user: root
+#        login_password: "{{ mysql_root_password }}"
+
+       
