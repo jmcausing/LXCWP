@@ -3,14 +3,13 @@
 
 ## Downloading nginx 'default' file
 
-if [[ $(ls default | grep default) ]]; 
+if [[ $(ls play.yml | grep play.yml) ]]; 
 then
-  echo "# 'default' file exist. Deleting.. Then download a new one"
-      rm default*
-       wget https://raw.githubusercontent.com/jmcausing/LXCWP/master/files/default
+   echo "# Existing play.yml detected. Deleting and downloading a new one."
+   rm play.yml
+   wget https://github.com/jmcausing/LXCWP/raw/master/play.yml
 else
-   echo "# Downloading nginx default file to files/default"
-   wget https://raw.githubusercontent.com/jmcausing/LXCWP/master/files/default
-  
+   echo "Downloading play.yml playbook"
+   wget https://github.com/jmcausing/LXCWP/raw/master/play.yml
 fi
 

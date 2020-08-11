@@ -1,6 +1,8 @@
 #!/bin/bash
 
 clear
+
+
 echo "#### LXC generator by John Mark C."
 echo "# Package: LXC, Nginx"
 echo "#"
@@ -84,7 +86,7 @@ lxc launch ubuntu:18.04 $lxcname
 
 
 echo "#"
-echo "#Let's generate SSH-KEY gen for this LXC"
+echo "# Let's generate SSH-KEY gen for this LXC"
 echo "#"
 ssh-keygen -f $HOME/.ssh/id_lxc_$lxcname -N '' -C 'key for local LXC'
 
@@ -179,77 +181,105 @@ SSHKEY=~/.ssh/id_lxc_${lxcname}
 
 
 
-echo "# Let's install WordPress with LEMP stack using Ansible."
-echo "# Creating playbook lemp.yml and host file"
-echo "- hosts: all
+# echo "# Let's install WordPress with LEMP stack using Ansible."
+# echo "# Creating playbook lemp.yml and host file"
+# echo "- hosts: all
 
-  vars:
-    ansible_host_key_checking: false
+#   vars:
+#     ansible_host_key_checking: false
 
-    # Workaround if LXC target host does not have python 3 (not by default).
-    ansible_python_interpreter: "/usr/bin/python3"
+#     # Workaround if LXC target host does not have python 3 (not by default).
+#     ansible_python_interpreter: "/usr/bin/python3"
 
-  become: true
-  become_user: root
+#   become: true
+#   become_user: root
 
-  tasks:
-    - name: apt clean
-      shell: apt clean
-      become: true
-      become_user: root
+#   tasks:
+#     - name: apt clean
+#       shell: apt clean
+#       become: true
+#       become_user: root
 
-    - name: apt update
-      shell: apt update
-      become: true
-      become_user: root
+#     - name: apt update
+#       shell: apt update
+#       become: true
+#       become_user: root
 
-    - name: Install Nginx latest version
-      apt: name=nginx state=latest
-    - name: start nginx
-      service:
-          name: nginx
-          state: started" >  ${lxcname}_lemp.yml
+#     - name: Install Nginx latest version
+#       apt: name=nginx state=latest
+#     - name: start nginx
+#       service:
+#           name: nginx
+#           state: started" >  ${lxcname}_lemp.yml
 
 
 echo "[lxc]
 ${LXC_IP} ansible_user=root "> ${lxcname}_hosts
 
+
+
+
+# Downloading ansible files 
+# Playbook yml file
+if [[ $(ls play.yml | grep play.yml) ]]; 
+then
+   echo "# Existing play.yml detected. Deleting and downloading a new one."
+   echo "#"
+   echo "#"
+   rm play.yml
+   wget https://github.com/jmcausing/LXCWP/raw/master/play.yml
+   echo "#"
+   echo "# Renaming play.ml to ${lxcname}_lemp.yml"
+   mv play.yml ${lxcname}_lemp.yml
+else
+   echo "#"
+   echo "#"
+   echo "Downloading play.yml playbook"
+   echo "#"
+   wget https://github.com/jmcausing/LXCWP/raw/master/play.yml
+   mv play.yml ${lxcname}_lemp.yml
+fi
+
+# vars file
+if [[ $(ls vars.yml | grep vars.yml) ]]; 
+then
+   echo "# Existing vars.yml detected. Deleting and downloading a new one."+
+   echo "#"
+   echo "#"
+   rm vars.yml
+   wget https://github.com/jmcausing/LXCWP/raw/master/vars.yml
+   echo "#"
+   echo "#"
+   echo "# Here's the varls.yml file: "
+   cat vars.yml
+
+else
+   echo "#"
+   echo "#"
+   echo "Downloading vars.yml playbook"
+   wget https://github.com/jmcausing/LXCWP/raw/master/vars.yml
+fi
+
+
+
+echo "# Checking files.."
 ls -al  ${lxcname}_lemp.yml
 ls -al  ${lxcname}_hosts
+ls -al vars.yml
 echo "#"
+
+
+
+
+
+
 echo "#"
 echo "# Running playbook with this command:"
 echo "#"
-echo "# ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook ${lxcname}_lemp.yml -i ${lxcname}_hosts --private-key=${SSHKEY} -vvv"
+echo "# ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook ${lxcname}_lemp.yml -i ${lxcname}_hosts --private-key=${SSHKEY} -vvv --check"
 echo "#"
 
-
-ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook ${lxcname}_lemp.yml -i ${lxcname}_hosts --private-key=~${SSHKEY}
-
-
-echo "#"
-
-echo "# Adding proxy device for port 80"
-lxc config device add ${lxcname} proxyport80 proxy listen=tcp:0.0.0.0:80 connect=tcp:localhost:80
-
-echo "#"
-echo "# Testing nginx.."
-curl -I http://${LXC_IP}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook ${lxcname}_lemp.yml -i ${lxcname}_hosts --private-key=~${SSHKEY} 
 
 echo "#"
 echo "# Thank you for using this basic LXC SSH setup!"
