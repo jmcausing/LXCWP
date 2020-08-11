@@ -12,22 +12,8 @@
 
   tasks:
 
-      # Required for mysql tasks if target main host LXD (not LXC) is running Ubuntu 18
-    - name: Install packages
-      apt: name={{item}}
-      with_items:
-        - python3-pip
-        - python3-mysqldb  
-
-    - name: Update apt Cache
-      apt: 
-        update_cache: yes
-        force_apt_get: yes
-        
     - name: Wait for APT Lock
       shell:  while fuser /var/lib/dpkg/lock >/dev/null 2>&1; do sleep 5; done;
-
-
 
     # Required for PHP FPM
     - apt_repository:
@@ -39,22 +25,15 @@
       become: true
       become_user: root
 
-
-
-
     # Installing packages: nginx, mariadb-server , python3-pymysql
-    - name: Install LEMP Packages [nginx, mysq-server, python3-pymysql, php-fpm']
+    - name: Install LEMP Packages [nginx, mysq-server, python3-pymysql']
       apt: name={{ item }} update_cache=yes state=latest
-      loop: [ 'nginx', 'mariadb-server', 'python3-pymysql' ]
-
-
+      loop: [ 'nginx', 'mariadb-server', 'python3-pymysql', 'python3-pip', 'python3-mysqldb' ]
 
     - name: Apt install software-properties and Apt update
       shell: apt install software-properties-common; apt update
       become: true
       become_user: root
-
-
 
     - name: Sets the root password 
       mysql_user: 
@@ -62,6 +41,9 @@
         password: "{{ mysql_root_password }}"
         login_unix_socket: /var/run/mysqld/mysqld.sock
 
+
+    
+    # -- START 
     # Step 1 — Creating a Database and User for WordPress
     # https://www.digitalocean.com/community/tutorials/how-to-install-wordpress-with-lemp-nginx-mariadb-and-php-on-debian-10
 
@@ -81,11 +63,14 @@
        priv: 'wordpress.*:ALL/wordpress.*:ALL/*.*:SUPER,RELOAD,SHOW DATABASES'
 
     - name: Flush Privileges
-      shell: mysql -e "FLUSH PRIVILEGES;"    
+      shell: mysql -e "FLUSH PRIVILEGES;"  
 
-
-
+    # Step 1 — Creating a Database and User for WordPress  
     # -- END 
+
+
+
+    # -- START 
     # Step 2 — Installing Additional PHP Extensions
     # https://www.digitalocean.com/community/tutorials/how-to-install-wordpress-with-lemp-nginx-mariadb-and-php-on-debian-10#step-2-%E2%80%94-installing-additional-php-extensions
  
@@ -97,13 +82,19 @@
       apt:  name={{ item }} 
       loop: [ 'php7.3-fpm', 'php7.3-mysql', 'php7.3-common','php7.3-cli','php7.3-bcmath','php7.3-bz2','php7.3-curl','php7.3-gd','php7.3-intl','php7.3-json','php7.3-mbstring','php7.3-readline','php7.3-xml','php7.3-zip' ]
 
-      # Nginx Configuration
+    # Nginx Configuration
     - name: Sets / copy Nginx conf file
       template:
         src: "default"
         dest: "/etc/nginx/sites-available/default"
+
+    # Test and reload nginx
+    - name: Test and reload Nginx 
+      shell: "nginx -t; systemctl reload nginx;"
+
     # Step 2 — Installing Additional PHP Extensions
     # -- END 
+
 
 
     # -- START
@@ -149,8 +140,6 @@
     # -- END
 
 
-    - name: Set permissions for files
-      shell: "nginx -t; systemctl reload nginx;"
 
 
 
