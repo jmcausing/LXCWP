@@ -87,6 +87,7 @@
 
 
 
+    # -- END 
     # Step 2 — Installing Additional PHP Extensions
     # https://www.digitalocean.com/community/tutorials/how-to-install-wordpress-with-lemp-nginx-mariadb-and-php-on-debian-10#step-2-%E2%80%94-installing-additional-php-extensions
  
@@ -103,7 +104,8 @@
       template:
         src: "default"
         dest: "/etc/nginx/sites-available/default"
-
+    # Step 2 — Installing Additional PHP Extensions
+    # -- END 
 
 
     # -- START
@@ -142,6 +144,8 @@
       template:
         src: "ansible_wpconfig.php"
         dest: "/var/www/html/wp-config.php"
+        owner: www-data
+        group: www-data
 
     # WordPress Configuration and permission -
     # -- END
@@ -156,30 +160,3 @@
 
 
 
-
-
-
-
-
-
- #   - name: Removes all anonymous user accounts
- #     mysql_user:
- #       # login_unix_socket is important to avoid authentication issue
- #       login_unix_socket: /var/run/mysqld/mysqld.sock
- #       name: ''
- #       host_all: yes
- #       state: absent
- #       login_user: root
- #       login_password: "{{ mysql_root_password }}"
-
-    
-#    For testing only - Working so far
-#    - name: Removes the MySQL 'performance_schema' database
-#      mysql_db: 
-#        login_unix_socket: /var/run/mysqld/mysqld.sock
-#        name: performance_schema 
-#        state: absent
-#       login_user: root
-#        login_password: "{{ mysql_root_password }}"
-
-       

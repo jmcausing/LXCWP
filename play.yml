@@ -12,14 +12,12 @@
 
   tasks:
 
-
-
-      # Required for mysql tasks
-    # - name: Install packages
-    #   apt: name={{item}}
-    #   with_items:
-    #     - python3-pip
-    #     - python3-mysqldb  
+      # Required for mysql tasks if target main host LXD (not LXC) is running Ubuntu 18
+    - name: Install packages
+      apt: name={{item}}
+      with_items:
+        - python3-pip
+        - python3-mysqldb  
 
     - name: Update apt Cache
       apt: 
@@ -97,7 +95,7 @@
 
     - name: Installing PHP 7.3 extension
       apt:  name={{ item }} 
-      loop: [ 'php7.3-fpm', 'php7.3-common','php7.3-cli','php7.3-bcmath','php7.3-bz2','php7.3-curl','php7.3-gd','php7.3-intl','php7.3-json','php7.3-mbstring','php7.3-readline','php7.3-xml','php7.3-zip' ]
+      loop: [ 'php7.3-fpm', 'php7.3-mysql', 'php7.3-common','php7.3-cli','php7.3-bcmath','php7.3-bz2','php7.3-curl','php7.3-gd','php7.3-intl','php7.3-json','php7.3-mbstring','php7.3-readline','php7.3-xml','php7.3-zip' ]
 
       # Nginx Configuration
     - name: Sets / copy Nginx conf file
@@ -149,6 +147,11 @@
 
     # WordPress Configuration and permission -
     # -- END
+
+
+    - name: Set permissions for files
+      shell: "nginx -t; systemctl reload nginx;"
+
 
 
 

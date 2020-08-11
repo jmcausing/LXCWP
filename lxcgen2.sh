@@ -228,6 +228,10 @@ ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook ${lxcname}_lemp.yml -i ${lxcnam
 
 
 echo "#"
+
+echo "# Adding proxy device for port 80"
+lxc config device add ${lxcname} proxyport80 proxy listen=tcp:0.0.0.0:80 connect=tcp:localhost:80
+
 echo "#"
 echo "# Testing nginx.."
 curl -I http://${LXC_IP}
